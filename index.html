@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Balance des bases — version drag & drop</title>
+    <style>
+        :root {
+            --bg: #0b1021;
+            --ink: #e5e7eb;
+            --muted: #94a3b8;
+            --panel: #0f172aee;
+            --card: #111827;
+            --edge: #1f2937;
+            --accent: #22c55e;
+            /* success */
+            --over: #ef4444;
+            /* too heavy */
+            --under: #60a5fa;
+            /* too light */
+            --shadow: 0 12px 30px rgba(0, 0, 0, .35);
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            background: radial-gradient(1400px 700px at 80% -10%, #1e293b, #0b1021), var(--bg);
+            color: var(--ink);
+            font: 16px/1.4 system-ui, Segoe UI, Roboto, Helvetica, Arial
+        }
+
+        h1 {
+            font-size: clamp(20px, 3vw, 28px);
+            margin: 0 0 10px 0
+        }
+
+        .app {
+            max-width: 1200px;
+            margin: 24px auto;
+            padding: 16px
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 12px;
+            align-items: end
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--edge);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            padding: 14px
+        }
+
+        label {
+            font-size: 12px;
+            color: var(--muted);
+            display: block;
+            margin-bottom: 6px
+        }
+
+        select,
+        input[type="number"],
+        input[type="text"],
+        button {
+            border-radius: 12px;
+            border: 1px solid #334155;
+            background: #0b1222;
+            color: var(--ink);
+            padding: 10px 12px;
+            font: inherit
+        }
+
+        button {
+            cursor: pointer
+        }
+
+        button.ghost {
+            background: #0b1222
+        }
+
+        button.primary {
+            background: linear-gradient(180deg, #16a34a, #15803d);
+            border-color: #14532d
+        }
+
+        /* Balance */
+        .board {
+            display: grid;
+            grid-template-columns: 1fr 60px 1fr;
+            gap: 16px;
+            margin-top: 16px
+        }
+
+        .pan {
+            background: linear-gradient(180deg, #0f172a, #0b1222);
+            border-radius: 18px;
+            border: 1px dashed #334155;
+            min-height: 280px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            position: relative
+        }
+
+        .pan h3 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: var(--muted)
+        }
+
+        .current-object {
+            font-size: 14px;
+            margin-bottom: 6px;
+            color: #cbd5e1
+        }
+
+        .dropzone {
+            flex: 1;
+            border-radius: 12px;
+            outline: 2px dashed transparent;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-content: flex-start;
+            padding: 6px
+        }
+
+        .dropzone.dragover {
+            outline-color: #64748b;
+            background: #0b122255
+        }
+
+        .mast {
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .mast .bar {
+            width: 8px;
+            height: 100%;
+            background: #374151;
+            border-radius: 4px
+        }
+
+        /* Tokens */
+        .token {
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 12px;
+            border-radius: 999px;
+            background: #020617;
+            border: 1px solid #334155;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .35);
+            font-weight: 600
+        }
+
+        .token.small {
+            padding: 6px 10px;
+            font-size: 13px
+        }
+
+        /* Suitcase */
+        .suitcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin-top: 16px
+        }
+
+        .slot {
+            background: linear-gradient(180deg, #0f172a, #0b1222);
+            border: 1px solid #334155;
+            border-radius: 14px;
+            padding: 12px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+            align-items: center
+        }
+
+        .remain {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        /* Status minimaliste */
+        .status {
+            margin-top: 14px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid #374151;
+            background: #0b1222;
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        .status.ok {
+            border-color: #14532d;
+            background: #062210;
+            color: #d1fae5
+        }
+
+        .status.over {
+            border-color: #7f1d1d;
+            background: #300;
+        }
+
+        .status.under {
+            border-color: #1e3a8a;
+            background: #0b1a34
+        }
+
+        .objects {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-top: 8px
+        }
+
+        .objects button {
+            border-radius: 12px;
+            padding: 8px 12px;
+            border: 1px solid #334155;
+            background: #020617;
+            color: var(--ink);
+            font-size: 13px;
+            text-align: left
+        }
+
+        .objects button.ok {
+            border-color: #14532d;
+            background: #062210
+        }
+
+        .objects button.bad {
+            border-color: #7f1d1d;
+            background: #3a0f0f
+        }
+
+        .hint {
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 12px
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <h1>Balance des bases — glisser / déposer</h1>
+
+        <div class="row">
+            <div class="card">
+                <label for="base">Base</label>
+                <select id="base">
+                    <option value="10" selected>Base 10</option>
+                    <option value="2">Base 2 (14 bits)</option>
+                    <option value="16">Base 16 (3 chiffres)</option>
+                </select>
+            </div>
+            <div class="card" id="teacherPanel">
+                <label for="target">Masse cible (cachée aux élèves)</label>
+                <input type="number" id="target" min="0" max="9999" step="1" placeholder="Choisir…" />
+                <div class="hint">Astuce : ajoute <code>?teacher=1</code> à l’URL pour afficher/masquer ce panneau
+                    (Ctrl+T pour basculer).</div>
+            </div>
+            <div class="card">
+                <label for="answer">Votre réponse (g)</label>
+                <div style="display:flex;gap:8px">
+                    <input type="number" id="answer" min="0" max="9999" step="1" placeholder="Entrez le poids" />
+                    <button id="checkAnswer" class="primary">Valider</button>
+                </div>
+                <div id="answerStatus" class="hint"></div>
+            </div>
+            <div class="card">
+                <label>&nbsp;</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button id="random" class="ghost">Cible aléatoire</button>
+                    <button id="resetRight" class="ghost">Vider le plateau droit</button>
+                </div>
+            </div>
+            <div class="card">
+                <label>Score</label>
+                <div id="scoreBox" style="font-weight:700">0 / 10</div>
+            </div>
+        </div>
+
+        <div class="board">
+            <div class="pan" id="leftPan">
+                <h3>Plateau gauche — objet</h3>
+                <div class="current-object" id="currentObject">(aucun)</div>
+                <div class="dropzone" id="leftZone" aria-label="Zone objet" data-zone="left"></div>
+            </div>
+            <div class="mast">
+                <div class="bar"></div>
+            </div>
+            <div class="pan" id="rightPan">
+                <h3>Plateau droit — vos poids</h3>
+                <div class="dropzone" id="rightZone" aria-label="Zone poids" data-zone="right"></div>
+            </div>
+        </div>
+
+        <div id="status" class="status">État : prêt.</div>
+
+        <div class="card">
+            <label>Valise de poids (reste disponible)</label>
+            <div id="suitcase" class="suitcase"></div>
+            <div class="hint">Glissez un poids depuis la valise vers le plateau droit. Pour retirer un poids posé,
+                glissez-le de la balance vers sa case dans la valise.</div>
+        </div>
+
+        <div class="card">
+            <label>Liste des 10 objets</label>
+            <div class="objects" id="objects"></div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            // --- État & DOM ---
+            const baseSel = document.getElementById('base');
+            const targetInput = document.getElementById('target');
+            const statusDiv = document.getElementById('status');
+            const suitcaseDiv = document.getElementById('suitcase');
+            const rightZone = document.getElementById('rightZone');
+            const leftZone = document.getElementById('leftZone');
+            const objectsDiv = document.getElementById('objects');
+            const teacherPanel = document.getElementById('teacherPanel');
+            const resetRightBtn = document.getElementById('resetRight');
+            const currentObjectEl = document.getElementById('currentObject');
+            const answerInput = document.getElementById('answer');
+            const checkAnswerBtn = document.getElementById('checkAnswer');
+            const answerStatus = document.getElementById('answerStatus');
+            const scoreBox = document.getElementById('scoreBox');
+
+            // Affichage d'un chiffre hexadécimal (0..F) pour base 16
+            function hexDigit(n) { return (n >= 0 && n <= 15) ? (n < 10 ? String(n) : 'ABCDEF'[n - 10]) : String(n); }
+
+            const OBJECTS = [
+                { name: 'Pastèque', min: 4000, max: 9999 },
+                { name: 'Ananas', min: 800, max: 2500 },
+                { name: 'Brique de lait 1L', min: 950, max: 1100 },
+                { name: 'Livre broché', min: 200, max: 900 },
+                { name: 'Ordinateur portable', min: 1200, max: 2500 },
+                { name: 'Smartphone', min: 150, max: 250 },
+                { name: 'Chaussure adulte', min: 300, max: 600 },
+                { name: 'Pomme', min: 120, max: 250 },
+                { name: 'Boîte de conserve 400g', min: 350, max: 500 },
+                { name: 'Trousse scolaire', min: 300, max: 1000 }
+            ];
+
+            let state = {
+                base: 10,
+                target: 0,
+                denominations: [1, 10, 100, 1000],
+                caps: [9, 9, 9, 9],        // base 10 : 9 de chaque
+                used: [],               // sera de la longueur des denoms
+                selectedIndex: 0,
+                assigned: [],           // masses assignées aux 10 objets
+                results: Array(10).fill(null) // null / true / false
+            };
+
+            // --- Utilitaires ---
+            function clampTarget(n) { return Math.min(9999, Math.max(0, n)); }
+            function safeParse(s) { try { return JSON.parse(s); } catch { return null; } }
+            function randInt(min, max) { min = Math.ceil(min); max = Math.floor(max); if (max < min) max = min; return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+            function setupBase(b) {
+                if (b === 10) {
+                    state.denominations = [1, 10, 100, 1000];
+                    state.caps = [9, 9, 9, 9];
+                } else if (b === 2) {
+                    // 14 bits → 2^0 .. 2^13, un seul de chaque
+                    state.denominations = Array.from({ length: 14 }, (_, i) => 2 ** i);
+                    state.caps = Array(14).fill(1);
+                } else if (b === 16) {
+                    // 3 chiffres hex → 1,16,256 ; on autorise 0..15 par chiffre
+                    state.denominations = [1, 16, 256];
+                    state.caps = [15, 15, 15];
+                }
+                state.used = Array(state.denominations.length).fill(0);
+            }
+
+            function capacity() {
+                return state.denominations.reduce((acc, d, i) => acc + d * state.caps[i], 0);
+            }
+
+            // --- Objets & affectations (sans persistance) ---
+            function generateAssignments() {
+                const cap = capacity();
+                state.assigned = OBJECTS.map(o => {
+                    const maxAllowed = Math.min(9999, cap, o.max);
+                    return randInt(o.min, maxAllowed);
+                });
+            }
+
+            function renderObjects() {
+                objectsDiv.innerHTML = '';
+                OBJECTS.forEach((o, i) => {
+                    const b = document.createElement('button');
+                    b.textContent = `${i + 1}. ${o.name}`;
+                    if (state.results[i] === true) b.classList.add('ok');
+                    else if (state.results[i] === false) b.classList.add('bad');
+                    b.onclick = () => selectObject(i);
+                    objectsDiv.append(b);
+                });
+            }
+
+            function selectObject(i) {
+                state.selectedIndex = i;
+                setTarget(state.assigned[i]);
+                currentObjectEl.textContent = `${i + 1}. ${OBJECTS[i].name}`;
+                answerInput.value = '';
+                answerStatus.textContent = '';
+                clearRight();
+            }
+
+            // --- Rendu valise ---
+            function renderSuitcase() {
+                suitcaseDiv.innerHTML = '';
+                state.denominations.forEach((d, i) => {
+                    const slot = document.createElement('div');
+                    slot.className = 'slot';
+
+                    const token = document.createElement('div');
+                    token.className = 'token';
+                    token.dataset.v = String(d);
+                    token.textContent = `${d}`;
+                    token.setAttribute('draggable', 'true');
+                    token.addEventListener('dragstart', ev => onDragStart(ev, { type: 'fromSuitcase', denomIndex: i }));
+
+                    const remain = document.createElement('div');
+                    remain.className = 'remain';
+                    remain.id = `remain-${i}`;
+                    remain.textContent = `Restant : ${state.caps[i] - state.used[i]} / ${state.caps[i]}`;
+
+                    const usedLine = document.createElement('div');
+                    usedLine.className = 'remain';
+                    usedLine.id = `used-${i}`;
+                    usedLine.textContent = (state.base === 16)
+                        ? `Utilisés : ${state.used[i]} (${hexDigit(state.used[i])})`
+                        : `Utilisés : ${state.used[i]}`;
+
+                    slot.append(token, remain, usedLine);
+                    suitcaseDiv.append(slot);
+
+                    slot.addEventListener('dragover', onDragOver);
+                    slot.addEventListener('dragleave', clearDragOver);
+                    slot.addEventListener('drop', ev => onDropToSuitcase(ev, i));
+                });
+            }
+
+            // --- Drag & drop ---
+            function onDragStart(ev, payload) { ev.dataTransfer.setData('application/json', JSON.stringify(payload)); ev.dataTransfer.effectAllowed = 'move'; }
+            function onDragOver(ev) { ev.preventDefault(); ev.currentTarget.classList.add('dragover'); }
+            function clearDragOver(ev) { ev.currentTarget.classList.remove('dragover'); }
+            ;[rightZone, leftZone].forEach(z => { z.addEventListener('dragover', onDragOver); z.addEventListener('dragleave', clearDragOver); z.addEventListener('drop', ev => { clearDragOver(ev); onDropToRight(ev); }); });
+
+            function createPlacedToken(denomIndex) {
+                const d = state.denominations[denomIndex];
+                const t = document.createElement('div');
+                t.className = 'token small';
+                t.dataset.v = String(d);
+                t.textContent = `${d}`;
+                t.setAttribute('draggable', 'true');
+                t.addEventListener('dragstart', ev => onDragStart(ev, { type: 'fromRight', denomIndex }));
+                return t;
+            }
+
+            function onDropToRight(ev) {
+                ev.preventDefault();
+                const data = safeParse(ev.dataTransfer.getData('application/json'));
+                if (!data) return;
+                if (data.type === 'fromSuitcase') {
+                    const i = data.denomIndex;
+                    if (state.used[i] < state.caps[i]) {
+                        state.used[i]++;
+                        rightZone.appendChild(createPlacedToken(i));
+                        update();
+                    }
+                }
+            }
+
+            function onDropToSuitcase(ev, denomIndex) {
+                ev.preventDefault();
+                clearDragOver(ev);
+                const data = safeParse(ev.dataTransfer.getData('application/json'));
+                if (!data) return;
+                if (data.type === 'fromRight') {
+                    const i = data.denomIndex;
+                    if (i === denomIndex && state.used[i] > 0) {
+                        const tokens = Array.from(rightZone.querySelectorAll('.token.small'));
+                        const idx = tokens.findIndex(tok => Number(tok.dataset.v) === state.denominations[i]);
+                        if (idx !== -1) { rightZone.removeChild(tokens[idx]); }
+                        state.used[i]--;
+                        update();
+                    }
+                }
+            }
+
+            // --- Calculs & statut ---
+            function sumRight() { return state.denominations.reduce((acc, d, i) => acc + d * state.used[i], 0); }
+
+            function updateStatus() {
+                const s = sumRight();
+                statusDiv.className = 'status';
+                const cap = capacity();
+                if (state.target > cap) { statusDiv.classList.add('over'); statusDiv.textContent = `Inatteignable dans la base ${state.base} (capacité ${cap} g).`; return; }
+                if (s === state.target) { statusDiv.classList.add('ok'); statusDiv.textContent = '✅ Équilibré !'; }
+                else if (s > state.target) { statusDiv.classList.add('over'); statusDiv.textContent = 'Trop lourd.'; }
+                else { statusDiv.classList.add('under'); statusDiv.textContent = 'Trop léger.'; }
+            }
+
+            function updateRemains() {
+                state.denominations.forEach((_, i) => {
+                    const el = document.getElementById(`remain-${i}`);
+                    if (el) el.textContent = `Restant : ${state.caps[i] - state.used[i]} / ${state.caps[i]}`;
+                    const u = document.getElementById(`used-${i}`);
+                    if (u) u.textContent = (state.base === 16)
+                        ? `Utilisés : ${state.used[i]} (${hexDigit(state.used[i])})`
+                        : `Utilisés : ${state.used[i]}`;
+                });
+            }
+
+            function clearRight() {
+                state.used = Array(state.denominations.length).fill(0);
+                rightZone.innerHTML = '';
+                update();
+            }
+
+            function update() { updateStatus(); updateRemains(); }
+
+            // --- Base & cible ---
+            function setBase(b) {
+                state.base = b;
+                setupBase(b);
+                clearRight();
+                renderSuitcase();
+                generateAssignments();
+                renderObjects();
+                if (state.selectedIndex != null) selectObject(state.selectedIndex);
+            }
+
+            function setTarget(v) {
+                const n = clampTarget(Math.floor(Number(v) || 0));
+                state.target = n;
+                targetInput.value = n;
+                update();
+            }
+
+            function randomTarget() {
+                const max = Math.min(capacity(), 9999);
+                const min = 1;
+                const n = Math.floor(Math.random() * (max - min + 1)) + min;
+                setTarget(n);
+            }
+
+            // --- Réponse élève & score (non persistant) ---
+            function recomputeScore() {
+                const sc = state.results.filter(x => x === true).length;
+                scoreBox.textContent = `${sc} / 10`;
+            }
+
+            function checkAnswer() {
+                const val = clampTarget(Math.floor(Number(answerInput.value) || 0));
+                if (val === state.target) {
+                    answerStatus.textContent = '✅ Bonne réponse !';
+                    state.results[state.selectedIndex] = true;
+                } else {
+                    answerStatus.textContent = '❌ Ce n\'est pas le bon poids.';
+                    state.results[state.selectedIndex] = false;
+                }
+                renderObjects();
+                recomputeScore();
+            }
+
+            // --- Événements ---
+            baseSel.addEventListener('change', e => setBase(Number(e.target.value)));
+            targetInput.addEventListener('input', e => setTarget(e.target.value));
+            document.getElementById('random').addEventListener('click', randomTarget);
+            resetRightBtn.addEventListener('click', clearRight);
+            checkAnswerBtn.addEventListener('click', checkAnswer);
+
+            // Mode enseignant : ?teacher=1 dans l'URL ou Ctrl+T pour basculer (pas de persistance du score)
+            function detectTeacher() { const url = new URL(window.location.href); return url.searchParams.get('teacher') === '1' || localStorage.getItem('bd_teacher') === '1'; }
+            function applyTeacherMode(on) { teacherPanel.style.display = on ? '' : 'none'; localStorage.setItem('bd_teacher', on ? '1' : '0'); }
+            document.addEventListener('keydown', (e) => { if (e.ctrlKey && e.key.toLowerCase() === 't') { const now = teacherPanel.style.display !== 'none'; applyTeacherMode(!now); } });
+
+            // --- Init ---
+            setBase(10);
+            generateAssignments();
+            renderObjects();
+            selectObject(0);
+            applyTeacherMode(detectTeacher());
+            recomputeScore();
+        })();
+    </script>
+</body>
+
+</html>
