@@ -51,9 +51,14 @@
 
         .row {
             display: grid;
-            grid-template-columns: repeat(6, minmax(0, 1fr));
+            grid-template-columns: minmax(200px, 240px) minmax(420px, 1fr) minmax(120px, 180px);
             gap: 12px;
-            align-items: end
+            align-items: start
+        }
+
+        .row>.card {
+            display: block;
+            height: auto
         }
 
         .card {
@@ -96,6 +101,38 @@
             border-color: #14532d
         }
 
+        /* Réponses: grille stable */
+        .answers-grid {
+            display: grid;
+            grid-template-columns: auto 1fr auto auto auto;
+            gap: 8px;
+            align-items: center
+        }
+
+        .sym {
+            font-weight: 700;
+            opacity: .8
+        }
+
+        .eq {
+            opacity: .7
+        }
+
+        .meas {
+            font-weight: 700;
+            white-space: nowrap
+        }
+
+        @media (max-width: 900px) {
+            .row {
+                grid-template-columns: 1fr
+            }
+
+            .answers-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* Balance */
         .board {
             display: grid;
@@ -121,10 +158,17 @@
             color: var(--muted)
         }
 
-        .current-object {
-            font-size: 14px;
-            margin-bottom: 6px;
-            color: #cbd5e1
+        .pan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0 0 8px 0
+        }
+
+        .smallbtn {
+            padding: 6px 10px;
+            font-size: 12px;
+            border-radius: 10px
         }
 
         .dropzone {
@@ -146,7 +190,8 @@
         .mast {
             display: flex;
             align-items: center;
-            justify-content: center
+            justify-content: center;
+            position: relative
         }
 
         .mast .bar {
@@ -154,6 +199,49 @@
             height: 100%;
             background: #374151;
             border-radius: 4px
+        }
+
+        .status-inline {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            min-width: 180px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid #374151;
+            background: #0b1222;
+            text-align: center
+        }
+
+        .status-inline.ok {
+            border-color: #14532d;
+            background: #062210;
+            color: #d1fae5
+        }
+
+        .status-inline.over {
+            border-color: #7f1d1d;
+            background: #300;
+            color: #fee2e2
+        }
+
+        .status-inline.under {
+            border-color: #1e3a8a;
+            background: #0b1a34;
+            color: #dbeafe
+        }
+
+        .measured-inline {
+            position: absolute;
+            left: 50%;
+            top: 30%;
+            transform: translate(-50%, -50%);
+            padding: 6px 10px;
+            border-radius: 10px;
+            border: 1px solid #374151;
+            background: #0b1222;
+            font-weight: 700
         }
 
         /* Tokens */
@@ -189,14 +277,20 @@
             border-radius: 14px;
             padding: 12px;
             display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 8px;
-            align-items: center
+            grid-template-columns: 1fr;
+            gap: 6px;
+            align-items: center;
+            justify-items: center
         }
 
         .remain {
             font-size: 12px;
             color: var(--muted)
+        }
+
+        .usedCount {
+            font-weight: 700;
+            text-align: center
         }
 
         /* Status minimaliste */
@@ -227,29 +321,42 @@
             background: #0b1a34
         }
 
-        .objects {
+        /* Objets dans le plateau gauche */
+        .objgrid {
+            flex: 1;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 10px;
-            margin-top: 8px
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+            padding: 6px
         }
 
-        .objects button {
+        .chip {
+            padding: 10px 12px;
             border-radius: 12px;
-            padding: 8px 12px;
             border: 1px solid #334155;
             background: #020617;
             color: var(--ink);
-            font-size: 13px;
-            text-align: left
+            text-align: center;
+            cursor: pointer
         }
 
-        .objects button.ok {
+        .chip.active {
+            background: #e5e7eb;
+            color: #0b1222;
+            border-color: #cbd5e1
+        }
+
+        .chip.ok {
             border-color: #14532d;
             background: #062210
         }
 
-        .objects button.bad {
+        .chip.warn {
+            border-color: #a16207;
+            background: #3a2f0f
+        }
+
+        .chip.bad {
             border-color: #7f1d1d;
             background: #3a0f0f
         }
@@ -275,26 +382,17 @@
                     <option value="16">Base 16 (3 chiffres)</option>
                 </select>
             </div>
-            <div class="card" id="teacherPanel">
-                <label for="target">Masse cible (cachée aux élèves)</label>
-                <input type="number" id="target" min="0" max="9999" step="1" placeholder="Choisir…" />
-                <div class="hint">Astuce : ajoute <code>?teacher=1</code> à l’URL pour afficher/masquer ce panneau
-                    (Ctrl+T pour basculer).</div>
-            </div>
             <div class="card">
-                <label for="answer">Votre réponse (g)</label>
-                <div style="display:flex;gap:8px">
-                    <input type="number" id="answer" min="0" max="9999" step="1" placeholder="Entrez le poids" />
+                <label>Votre conversion</label>
+                <div class="answers-grid">
+                    <span id="baseSymbol" class="sym"></span>
+                    <input type="text" id="answerBase" placeholder="Décimal standard (0-9)" />
+                    <span class="eq">=</span>
+                    <span id="measuredInline" class="meas">0 g</span>
                     <button id="checkAnswer" class="primary">Valider</button>
                 </div>
+                <div id="answerBaseHelp" class="hint"></div>
                 <div id="answerStatus" class="hint"></div>
-            </div>
-            <div class="card">
-                <label>&nbsp;</label>
-                <div style="display:flex;gap:8px;flex-wrap:wrap">
-                    <button id="random" class="ghost">Cible aléatoire</button>
-                    <button id="resetRight" class="ghost">Vider le plateau droit</button>
-                </div>
             </div>
             <div class="card">
                 <label>Score</label>
@@ -304,31 +402,26 @@
 
         <div class="board">
             <div class="pan" id="leftPan">
-                <h3>Plateau gauche — objet</h3>
-                <div class="current-object" id="currentObject">(aucun)</div>
-                <div class="dropzone" id="leftZone" aria-label="Zone objet" data-zone="left"></div>
+                <h3>Plateau gauche — objets</h3>
+                <div class="objgrid" id="leftZone"></div>
             </div>
             <div class="mast">
                 <div class="bar"></div>
+                <div id="status" class="status-inline">État : prêt.</div>
             </div>
             <div class="pan" id="rightPan">
-                <h3>Plateau droit — vos poids</h3>
+                <div class="pan-header">
+                    <h3>Plateau droit — vos poids</h3>
+                    <button id="resetRight" class="ghost smallbtn">Vider</button>
+                </div>
                 <div class="dropzone" id="rightZone" aria-label="Zone poids" data-zone="right"></div>
             </div>
         </div>
-
-        <div id="status" class="status">État : prêt.</div>
-
         <div class="card">
             <label>Valise de poids (reste disponible)</label>
             <div id="suitcase" class="suitcase"></div>
             <div class="hint">Glissez un poids depuis la valise vers le plateau droit. Pour retirer un poids posé,
                 glissez-le de la balance vers sa case dans la valise.</div>
-        </div>
-
-        <div class="card">
-            <label>Liste des 10 objets</label>
-            <div class="objects" id="objects"></div>
         </div>
     </div>
 
@@ -336,33 +429,33 @@
         (function () {
             // --- État & DOM ---
             const baseSel = document.getElementById('base');
-            const targetInput = document.getElementById('target');
             const statusDiv = document.getElementById('status');
             const suitcaseDiv = document.getElementById('suitcase');
             const rightZone = document.getElementById('rightZone');
             const leftZone = document.getElementById('leftZone');
-            const objectsDiv = document.getElementById('objects');
-            const teacherPanel = document.getElementById('teacherPanel');
-            const resetRightBtn = document.getElementById('resetRight');
-            const currentObjectEl = document.getElementById('currentObject');
-            const answerInput = document.getElementById('answer');
+            const measuredInline = document.getElementById('measuredInline');
+            const baseSymbol = document.getElementById('baseSymbol');
+            const answerBaseInput = document.getElementById('answerBase');
+            const answerBaseHelp = document.getElementById('answerBaseHelp');
             const checkAnswerBtn = document.getElementById('checkAnswer');
             const answerStatus = document.getElementById('answerStatus');
             const scoreBox = document.getElementById('scoreBox');
+            const resetRightBtn = document.getElementById('resetRight');
 
-            // Affichage d'un chiffre hexadécimal (0..F) pour base 16
             function hexDigit(n) { return (n >= 0 && n <= 15) ? (n < 10 ? String(n) : 'ABCDEF'[n - 10]) : String(n); }
+            function isValidDigits(s, b) { if (typeof s !== 'string') return false; const t = s.trim(); if (!t) return false; if (b === 2) return /^[01]+$/.test(t); if (b === 16) return /^[0-9a-fA-F]+$/.test(t); return /^[0-9]+$/.test(t); }
+            function clampTarget(n) { return Math.min(9999, Math.max(0, n)); }
 
             const OBJECTS = [
                 { name: 'Pastèque', min: 4000, max: 9999 },
                 { name: 'Ananas', min: 800, max: 2500 },
-                { name: 'Brique de lait 1L', min: 950, max: 1100 },
+                { name: 'Brique de lait', min: 950, max: 1100 },
                 { name: 'Livre broché', min: 200, max: 900 },
                 { name: 'Ordinateur portable', min: 1200, max: 2500 },
                 { name: 'Smartphone', min: 150, max: 250 },
                 { name: 'Chaussure adulte', min: 300, max: 600 },
                 { name: 'Pomme', min: 120, max: 250 },
-                { name: 'Boîte de conserve 400g', min: 350, max: 500 },
+                { name: 'Boîte de conserve', min: 350, max: 500 },
                 { name: 'Trousse scolaire', min: 300, max: 1000 }
             ];
 
@@ -374,13 +467,8 @@
                 used: [],               // sera de la longueur des denoms
                 selectedIndex: 0,
                 assigned: [],           // masses assignées aux 10 objets
-                results: Array(10).fill(null) // null / true / false
+                results: Array(10).fill(null) // null | 'ok' | 'warn' | 'bad'
             };
-
-            // --- Utilitaires ---
-            function clampTarget(n) { return Math.min(9999, Math.max(0, n)); }
-            function safeParse(s) { try { return JSON.parse(s); } catch { return null; } }
-            function randInt(min, max) { min = Math.ceil(min); max = Math.floor(max); if (max < min) max = min; return Math.floor(Math.random() * (max - min + 1)) + min; }
 
             function setupBase(b) {
                 if (b === 10) {
@@ -391,7 +479,7 @@
                     state.denominations = Array.from({ length: 14 }, (_, i) => 2 ** i);
                     state.caps = Array(14).fill(1);
                 } else if (b === 16) {
-                    // 3 chiffres hex → 1,16,256 ; on autorise 0..15 par chiffre
+                    // 3 chiffres hex → 1,16,256 ; autorisé 0..15 par chiffre
                     state.denominations = [1, 16, 256];
                     state.caps = [15, 15, 15];
                 }
@@ -407,42 +495,52 @@
                 const cap = capacity();
                 state.assigned = OBJECTS.map(o => {
                     const maxAllowed = Math.min(9999, cap, o.max);
-                    return randInt(o.min, maxAllowed);
+                    return Math.max(o.min, Math.floor(Math.random() * (maxAllowed - o.min + 1)) + o.min);
                 });
             }
 
             function renderObjects() {
-                objectsDiv.innerHTML = '';
+                leftZone.innerHTML = '';
                 OBJECTS.forEach((o, i) => {
-                    const b = document.createElement('button');
-                    b.textContent = `${i + 1}. ${o.name}`;
-                    if (state.results[i] === true) b.classList.add('ok');
-                    else if (state.results[i] === false) b.classList.add('bad');
-                    b.onclick = () => selectObject(i);
-                    objectsDiv.append(b);
+                    const chip = document.createElement('div');
+                    chip.className = 'chip';
+                    chip.textContent = `${o.name}`;
+                    if (state.selectedIndex === i) chip.classList.add('active');
+                    if (state.results[i] === 'ok') chip.classList.add('ok');
+                    else if (state.results[i] === 'warn') chip.classList.add('warn');
+                    else if (state.results[i] === 'bad') chip.classList.add('bad');
+                    chip.onclick = () => selectObject(i);
+                    leftZone.append(chip);
                 });
             }
 
             function selectObject(i) {
                 state.selectedIndex = i;
                 setTarget(state.assigned[i]);
-                currentObjectEl.textContent = `${i + 1}. ${OBJECTS[i].name}`;
-                answerInput.value = '';
+
+                answerBaseInput.value = '';
                 answerStatus.textContent = '';
                 clearRight();
+                renderObjects();
             }
 
-            // --- Rendu valise ---
+            // --- Rendu valise (ordre décroissant, compteur utilisé au-dessus) ---
             function renderSuitcase() {
                 suitcaseDiv.innerHTML = '';
-                state.denominations.forEach((d, i) => {
+                const order = state.denominations.map((d, i) => ({ d, i })).sort((a, b) => b.d - a.d);
+                order.forEach(({ d, i }) => {
                     const slot = document.createElement('div');
                     slot.className = 'slot';
+
+                    const usedTop = document.createElement('div');
+                    usedTop.className = 'usedCount';
+                    usedTop.id = `used-${i}`;
+                    usedTop.textContent = (state.base === 16) ? `${state.used[i]} (${hexDigit(state.used[i])})` : `${state.used[i]}`;
 
                     const token = document.createElement('div');
                     token.className = 'token';
                     token.dataset.v = String(d);
-                    token.textContent = `${d}`;
+                    token.textContent = `${d} g`;
                     token.setAttribute('draggable', 'true');
                     token.addEventListener('dragstart', ev => onDragStart(ev, { type: 'fromSuitcase', denomIndex: i }));
 
@@ -451,14 +549,7 @@
                     remain.id = `remain-${i}`;
                     remain.textContent = `Restant : ${state.caps[i] - state.used[i]} / ${state.caps[i]}`;
 
-                    const usedLine = document.createElement('div');
-                    usedLine.className = 'remain';
-                    usedLine.id = `used-${i}`;
-                    usedLine.textContent = (state.base === 16)
-                        ? `Utilisés : ${state.used[i]} (${hexDigit(state.used[i])})`
-                        : `Utilisés : ${state.used[i]}`;
-
-                    slot.append(token, remain, usedLine);
+                    slot.append(usedTop, token, remain);
                     suitcaseDiv.append(slot);
 
                     slot.addEventListener('dragover', onDragOver);
@@ -471,14 +562,16 @@
             function onDragStart(ev, payload) { ev.dataTransfer.setData('application/json', JSON.stringify(payload)); ev.dataTransfer.effectAllowed = 'move'; }
             function onDragOver(ev) { ev.preventDefault(); ev.currentTarget.classList.add('dragover'); }
             function clearDragOver(ev) { ev.currentTarget.classList.remove('dragover'); }
-            ;[rightZone, leftZone].forEach(z => { z.addEventListener('dragover', onDragOver); z.addEventListener('dragleave', clearDragOver); z.addEventListener('drop', ev => { clearDragOver(ev); onDropToRight(ev); }); });
+            rightZone.addEventListener('dragover', onDragOver);
+            rightZone.addEventListener('dragleave', clearDragOver);
+            rightZone.addEventListener('drop', ev => { clearDragOver(ev); onDropToRight(ev); });
 
             function createPlacedToken(denomIndex) {
                 const d = state.denominations[denomIndex];
                 const t = document.createElement('div');
                 t.className = 'token small';
                 t.dataset.v = String(d);
-                t.textContent = `${d}`;
+                t.textContent = `${d} g`;
                 t.setAttribute('draggable', 'true');
                 t.addEventListener('dragstart', ev => onDragStart(ev, { type: 'fromRight', denomIndex }));
                 return t;
@@ -486,7 +579,7 @@
 
             function onDropToRight(ev) {
                 ev.preventDefault();
-                const data = safeParse(ev.dataTransfer.getData('application/json'));
+                const data = JSON.parse(ev.dataTransfer.getData('application/json') || 'null');
                 if (!data) return;
                 if (data.type === 'fromSuitcase') {
                     const i = data.denomIndex;
@@ -501,7 +594,7 @@
             function onDropToSuitcase(ev, denomIndex) {
                 ev.preventDefault();
                 clearDragOver(ev);
-                const data = safeParse(ev.dataTransfer.getData('application/json'));
+                const data = JSON.parse(ev.dataTransfer.getData('application/json') || 'null');
                 if (!data) return;
                 if (data.type === 'fromRight') {
                     const i = data.denomIndex;
@@ -533,19 +626,16 @@
                     const el = document.getElementById(`remain-${i}`);
                     if (el) el.textContent = `Restant : ${state.caps[i] - state.used[i]} / ${state.caps[i]}`;
                     const u = document.getElementById(`used-${i}`);
-                    if (u) u.textContent = (state.base === 16)
-                        ? `Utilisés : ${state.used[i]} (${hexDigit(state.used[i])})`
-                        : `Utilisés : ${state.used[i]}`;
+                    if (u) u.textContent = (state.base === 16) ? `${state.used[i]} (${hexDigit(state.used[i])})` : `${state.used[i]}`;
                 });
             }
 
-            function clearRight() {
-                state.used = Array(state.denominations.length).fill(0);
-                rightZone.innerHTML = '';
-                update();
-            }
+            function clearRight() { state.used = Array(state.denominations.length).fill(0); rightZone.innerHTML = ''; update(); }
+            function update() { updateStatus(); updateRemains(); updateMeasuredGrams(); }
 
-            function update() { updateStatus(); updateRemains(); }
+            function updateMeasuredGrams() {
+                if (measuredInline) measuredInline.textContent = String(sumRight()) + ' g';
+            }
 
             // --- Base & cible ---
             function setBase(b) {
@@ -556,36 +646,41 @@
                 generateAssignments();
                 renderObjects();
                 if (state.selectedIndex != null) selectObject(state.selectedIndex);
+                updateAnswerUI();
             }
 
-            function setTarget(v) {
-                const n = clampTarget(Math.floor(Number(v) || 0));
-                state.target = n;
-                targetInput.value = n;
-                update();
-            }
+            function setTarget(v) { state.target = clampTarget(Math.floor(Number(v) || 0)); update(); }
 
-            function randomTarget() {
-                const max = Math.min(capacity(), 9999);
-                const min = 1;
-                const n = Math.floor(Math.random() * (max - min + 1)) + min;
-                setTarget(n);
-            }
-
-            // --- Réponse élève & score (non persistant) ---
-            function recomputeScore() {
-                const sc = state.results.filter(x => x === true).length;
-                scoreBox.textContent = `${sc} / 10`;
-            }
+            // --- Réponse élève & score ---
+            function recomputeScore() { const sc = state.results.filter(x => x === 'ok').length; scoreBox.textContent = `${sc} / 10`; }
 
             function checkAnswer() {
-                const val = clampTarget(Math.floor(Number(answerInput.value) || 0));
-                if (val === state.target) {
-                    answerStatus.textContent = '✅ Bonne réponse !';
-                    state.results[state.selectedIndex] = true;
+                const gramsVal = sumRight();
+                const baseStr = (answerBaseInput.value || '').trim();
+
+                let formatOk = isValidDigits(baseStr, state.base);
+                if (formatOk) {
+                    if (state.base === 2 && baseStr.length > 14) formatOk = false;
+                    if (state.base === 16 && baseStr.length > 3) formatOk = false;
+                }
+
+                const gramsOk = (gramsVal === state.target);
+                const baseOk = formatOk ? (parseInt(baseStr, state.base) === state.target) : false;
+
+                if (!formatOk) {
+                    answerStatus.textContent = (state.base === 2)
+                        ? 'Format invalide : binaire attendu (0/1), 14 bits max.'
+                        : (state.base === 16 ? 'Format invalide : hexadécimal attendu (0-9, A-F), 3 chiffres max.' : 'Format invalide : décimal attendu.');
+                    state.results[state.selectedIndex] = 'bad';
+                } else if (gramsOk && baseOk) {
+                    answerStatus.textContent = '✅ Bonne réponse (masse et conversion).';
+                    state.results[state.selectedIndex] = 'ok';
+                } else if (gramsOk && !baseOk) {
+                    answerStatus.textContent = '🟠 Masse correcte, conversion incorrecte.';
+                    state.results[state.selectedIndex] = 'warn';
                 } else {
-                    answerStatus.textContent = '❌ Ce n\'est pas le bon poids.';
-                    state.results[state.selectedIndex] = false;
+                    answerStatus.textContent = '❌ Masse incorrecte.';
+                    state.results[state.selectedIndex] = 'bad';
                 }
                 renderObjects();
                 recomputeScore();
@@ -593,23 +688,31 @@
 
             // --- Événements ---
             baseSel.addEventListener('change', e => setBase(Number(e.target.value)));
-            targetInput.addEventListener('input', e => setTarget(e.target.value));
-            document.getElementById('random').addEventListener('click', randomTarget);
             resetRightBtn.addEventListener('click', clearRight);
             checkAnswerBtn.addEventListener('click', checkAnswer);
+            answerBaseInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkAnswer(); });
 
-            // Mode enseignant : ?teacher=1 dans l'URL ou Ctrl+T pour basculer (pas de persistance du score)
-            function detectTeacher() { const url = new URL(window.location.href); return url.searchParams.get('teacher') === '1' || localStorage.getItem('bd_teacher') === '1'; }
-            function applyTeacherMode(on) { teacherPanel.style.display = on ? '' : 'none'; localStorage.setItem('bd_teacher', on ? '1' : '0'); }
-            document.addEventListener('keydown', (e) => { if (e.ctrlKey && e.key.toLowerCase() === 't') { const now = teacherPanel.style.display !== 'none'; applyTeacherMode(!now); } });
+            // --- UI base help ---
+            function updateAnswerUI() {
+                if (state.base === 2) {
+                    answerBaseInput.placeholder = 'Binaire (0/1, 14 bits max.)';
+                    if (baseSymbol) baseSymbol.textContent = '%';
+                } else if (state.base === 16) {
+                    answerBaseInput.placeholder = 'Hexadécimal (0-9, A-F, 3 chiffres max.)';
+                    if (baseSymbol) baseSymbol.textContent = '$';
+                } else {
+                    answerBaseInput.placeholder = 'Décimal standard (0-9)';
+                    if (baseSymbol) baseSymbol.textContent = '';
+                }
+            }
 
             // --- Init ---
             setBase(10);
             generateAssignments();
             renderObjects();
             selectObject(0);
-            applyTeacherMode(detectTeacher());
             recomputeScore();
+            updateAnswerUI();
         })();
     </script>
 </body>
