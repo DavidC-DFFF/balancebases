@@ -405,6 +405,104 @@
         #scoreBox {
             text-align: center
         }
+
+        .status-inline {
+            display: none !important
+        }
+
+        /* Aiguille centrale */
+        .needle {
+            position: absolute;
+            left: 50%;
+            bottom: 18px;
+            width: 4px;
+            height: 90px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            transform-origin: 50% 100%;
+            transform: translateX(-50%) rotate(0deg);
+            transition: transform .25s ease, background .25s ease, color .25s ease;
+            z-index: 3;
+            color: #9ca3af
+        }
+
+        .needle::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 10px solid currentColor
+        }
+
+        .needle.ok {
+            color: #16a34a;
+            background: #16a34a
+        }
+
+        .needle.over {
+            color: #ef4444;
+            background: #ef4444
+        }
+
+        .needle.under {
+            color: #60a5fa;
+            background: #60a5fa
+        }
+
+        .pivot {
+            position: absolute;
+            left: 50%;
+            bottom: 14px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            border: 2px solid #374151;
+            transform: translateX(-50%);
+            z-index: 4
+        }
+
+        .status-mini {
+            position: absolute;
+            left: 50%;
+            bottom: 8px;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: #cbd5e1;
+            opacity: .9;
+            z-index: 4
+        }
+
+        .gate {
+            position: absolute;
+            left: 50%;
+            top: 10px;
+            width: 0;
+            height: 0;
+            transform: translateX(-50%);
+        }
+
+        .gate::before,
+        .gate::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            height: 82px;
+            width: 3px;
+            background: #475569;
+            border-radius: 2px
+        }
+
+        .gate::before {
+            left: -18px
+        }
+
+        .gate::after {
+            left: 18px
+        }
     </style>
 </head>
 
@@ -445,7 +543,10 @@
             </div>
             <div class="mast">
                 <div class="bar"></div>
-                <div id="status" class="status-inline">État : prêt.</div>
+                <div class="needle" id="needle"></div>
+                <div class="pivot"></div>
+                <div class="gate" aria-hidden="true"></div>
+                <div id="statusMini" class="status-mini">Prêt</div>
             </div>
             <div class="pan" id="rightPan">
                 <div class="pan-header">
@@ -467,7 +568,8 @@
     <script>
         (function () {
             const baseSel = document.getElementById('base');
-            const statusDiv = document.getElementById('status');
+            const needleEl = document.getElementById('needle');
+            const statusMini = document.getElementById('statusMini');
             const suitcaseDiv = document.getElementById('suitcase');
             const rightZone = document.getElementById('rightZone');
             const leftZone = document.getElementById('leftZone');
@@ -641,23 +743,33 @@
 
             function updateStatus() {
                 const s = sumRight();
-                statusDiv.className = 'status-inline';
                 const cap = capacity();
-                const tgt = currentAssigned()[state.selectedIndex];
+                const tgt = currentAssigned()[state.selectedIndex] ?? 0;
+                const diff = s - tgt;
+                const denom = Math.max(tgt, cap * 0.25, 1);
+                const ratio = Math.max(-1, Math.min(1, diff / denom));
+                const angle = ratio * 20; // ±20°
+
+                // Aiguille
+                if (needleEl) {
+                    needleEl.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+                    needleEl.classList.remove('ok', 'over', 'under');
+                }
+
                 if (tgt > cap) {
-                    statusDiv.classList.add('over');
-                    statusDiv.innerHTML = `Inatteignable<br>(capacité ${cap} g)`;
+                    statusMini.textContent = `Inatteignable (cap ${cap} g)`;
+                    if (needleEl) needleEl.classList.add('over');
                     return;
                 }
-                if (s === tgt) {
-                    statusDiv.classList.add('ok');
-                    statusDiv.innerHTML = '✅ Équilibré !<br>&nbsp;';
-                } else if (s > tgt) {
-                    statusDiv.classList.add('over');
-                    statusDiv.innerHTML = 'Trop lourd<br>&nbsp;';
+                if (diff === 0) {
+                    statusMini.textContent = 'Équilibré !';
+                    if (needleEl) needleEl.classList.add('ok');
+                } else if (diff > 0) {
+                    statusMini.textContent = 'Trop lourd';
+                    if (needleEl) needleEl.classList.add('over');
                 } else {
-                    statusDiv.classList.add('under');
-                    statusDiv.innerHTML = 'Trop léger<br>&nbsp;';
+                    statusMini.textContent = 'Trop léger';
+                    if (needleEl) needleEl.classList.add('under');
                 }
             }
 
