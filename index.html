@@ -7,16 +7,67 @@
     <title>Balance des bases — version drag & drop</title>
     <style>
         :root {
-            --bg: #0b1021;
-            --ink: #e5e7eb;
-            --muted: #94a3b8;
-            --panel: #0f172aee;
-            --card: #111827;
-            --edge: #1f2937;
-            --shadow: 0 12px 30px rgba(0, 0, 0, .35);
-            --ok: #16a34a;
-            --over: #ef4444;
-            --under: #60a5fa;
+            /* Thème CLAIR par défaut — pastel et uni */
+            --bg: #f7faff;
+            /* fond papier bleuté très clair */
+            --ink: #0b1221;
+            /* texte foncé */
+            --muted: #475569;
+            /* texte secondaire */
+            --panel: #ffffff;
+            /* cartes/champs */
+            --card: #ffffff;
+            /* (pas de dégradé) */
+            --edge: #e3e8ff;
+            /* bordures pastel */
+            --shadow: 0 10px 24px rgba(2, 6, 23, .08);
+            --ok: #86efac;
+            --over: #fca5a5;
+            --under: #93c5fd;
+            /* pastels utiles */
+            --field: #ffffff;
+            /* champs */
+            --chipbg: #f2f6ff;
+            /* puces objets */
+            --chipborder: #dee7ff;
+            /* contour puces */
+        }
+
+        /* Thème sombre (optionnel via bouton) */
+        body[data-theme='dark'] {
+            --bg: #1b2742;
+            --ink: #f3f6ff;
+            --muted: #b9c6d8;
+            --panel: #223357ee;
+            --card: #1a2b4a;
+            --edge: #516d9b;
+            --field: #20355a;
+            --chipbg: #21365f;
+            --chipborder: #5b79a8;
+        }
+
+        body[data-theme='light'] {
+            --bg: #f6f8fc;
+            --ink: #0b1221;
+            --muted: #334155;
+            --panel: #ffffffee;
+            --card: #ffffff;
+            --edge: #cbd5e1;
+            --field: #ffffff;
+            --chipbg: #f1f5f9;
+            --chipborder: #cbd5e1;
+        }
+
+        body[data-theme='light'] {
+            --bg: #f6f7fb;
+            --ink: #0b1221;
+            --muted: #334155;
+            --panel: #ffffffee;
+            --card: #ffffff;
+            --edge: #cbd5e1;
+            --field: #ffffff;
+            --chipbg: #f1f5f9;
+            --chipborder: #cbd5e1;
         }
 
         * {
@@ -30,19 +81,35 @@
 
         body {
             margin: 0;
-            background: radial-gradient(1400px 700px at 80% -10%, #1e293b, #0b1021), var(--bg);
+            background: var(--bg);
             color: var(--ink);
             font: 16px/1.4 system-ui, Segoe UI, Roboto, Helvetica, Arial
         }
 
         h1 {
             font-size: clamp(20px, 3vw, 28px);
-            margin: 0 0 10px 0
+            margin: 0
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 4px 0 8px
+        }
+
+        .themebtn {
+            padding: 6px 10px;
+            border-radius: 12px;
+            border: 1px solid var(--edge);
+            background: var(--panel);
+            color: var(--ink);
+            box-shadow: var(--shadow)
         }
 
         .app {
             max-width: 1200px;
-            margin: 24px auto;
+            margin: 8px auto;
             padding: 16px
         }
 
@@ -78,8 +145,8 @@
         input,
         button {
             border-radius: 12px;
-            border: 1px solid #334155;
-            background: #0b1222;
+            border: 1px solid var(--chipborder);
+            background: var(--field);
             color: var(--ink);
             padding: 10px 12px;
             font: inherit
@@ -91,7 +158,22 @@
 
         .primary {
             background: linear-gradient(180deg, #16a34a, #15803d);
-            border-color: #14532d
+            border-color: #14532d;
+            color: #fff
+        }
+
+        .primary:hover {
+            filter: brightness(1.05)
+        }
+
+        .ghost {
+            background: var(--field);
+            border-color: var(--edge);
+            color: var(--ink)
+        }
+
+        .ghost:hover {
+            filter: brightness(1.05)
         }
 
         .primary.thin {
@@ -135,14 +217,14 @@
             display: grid;
             grid-template-columns: 1fr 60px 1fr;
             gap: 16px;
-            margin-top: 16px
+            margin: 16px 0
         }
 
         .pan {
-            background: linear-gradient(180deg, #0f172a, #0b1222);
+            background: var(--panel);
             border-radius: 18px;
-            border: 1px dashed #334155;
-            min-height: 280px;
+            border: 1px dashed var(--chipborder);
+            min-height: 220px;
             padding: 14px;
             display: flex;
             flex-direction: column;
@@ -190,7 +272,11 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            min-height: 120px
+            min-height: 100px;
+            background: var(--panel);
+            border: 1px solid var(--edge);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
         }
 
         .mast .bar {
@@ -239,12 +325,16 @@
             display: grid;
             gap: 8px;
             overflow-x: auto;
-            padding-bottom: 6px
+            padding: 12px;
+            background: var(--panel);
+            border: 1px solid var(--edge);
+            border-radius: 16px;
+            box-shadow: var(--shadow)
         }
 
         .slot {
-            background: linear-gradient(180deg, #0f172a, #0b1222);
-            border: 1px solid #334155;
+            background: linear-gradient(180deg, var(--panel), var(--card));
+            border: 1px solid var(--chipborder);
             border-radius: 14px;
             padding: 8px;
             display: flex;
@@ -260,10 +350,11 @@
             justify-content: center;
             padding: 8px 10px;
             border-radius: 999px;
-            background: #020617;
-            border: 1px solid #334155;
+            background: var(--chipbg);
+            border: 1px solid var(--chipborder);
             box-shadow: 0 2px 8px rgba(0, 0, 0, .35);
-            font-weight: 600
+            font-weight: 600;
+            color: var(--ink)
         }
 
         .token.small {
@@ -281,125 +372,66 @@
             color: var(--muted)
         }
 
-        .slot {
-            background: linear-gradient(180deg, #0f172a, #0b1222);
-            border: 1px solid #334155;
-            border-radius: 14px;
-            padding: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            width: 120px
-        }
 
-        .token {
-            user-select: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8px 10px;
-            border-radius: 999px;
-            background: #020617;
-            border: 1px solid #334155;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, .35);
-            font-weight: 600
-        }
-
-        .token.small {
-            padding: 6px 10px;
-            font-size: 12px
-        }
-
-        .usedCount {
-            font-weight: 700;
-            text-align: center
-        }
-
-        .remain {
-            font-size: 12px;
-            color: var(--muted)
-        }
-
-        .slot {
-            background: linear-gradient(180deg, #0f172a, #0b1222);
-            border: 1px solid #334155;
-            border-radius: 14px;
-            padding: 12px;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 6px;
-            align-items: center;
-            justify-items: center
-        }
-
-        .token {
-            user-select: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 12px;
-            border-radius: 999px;
-            background: #020617;
-            border: 1px solid #334155;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, .35);
-            font-weight: 600
-        }
-
-        .token.small {
-            padding: 6px 10px;
-            font-size: 13px
-        }
-
-        .usedCount {
-            font-weight: 700;
-            text-align: center
-        }
-
-        .remain {
-            font-size: 12px;
-            color: var(--muted)
-        }
 
         /* Objets (plateau gauche) */
         .objgrid {
-            flex: 1;
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 8px;
-            padding: 6px
+            padding: 8px
         }
 
         .chip {
-            padding: 6px 10px;
+            padding: 8px 10px;
             border-radius: 12px;
-            border: 1px solid #334155;
-            background: #020617;
+            border: 1px solid var(--chipborder);
+            background: var(--chipbg);
             color: var(--ink);
             text-align: center;
             cursor: pointer;
-            font-size: 13px
+            font-size: 13px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .35)
+        }
+
+        .chip:hover {
+            filter: brightness(1.05)
         }
 
         .chip.active {
-            background: #e5e7eb;
-            color: #0b1222;
-            border-color: #cbd5e1
+            border-width: 4px
         }
 
+        /* États en pastel, texte foncé */
         .chip.ok {
-            border-color: #14532d;
-            background: #062210
-        }
-
-        .chip.warn {
-            border-color: #a16207;
-            background: #3a2f0f
+            background: #c9f7d5;
+            color: #0b1221;
+            border-color: #86efac
         }
 
         .chip.bad {
-            border-color: #7f1d1d;
-            background: #3a0f0f
+            background: #fed7d7;
+            color: #0b1221;
+            border-color: #fca5a5
+        }
+
+        .chip.warn {
+            background: #fde68a;
+            color: #0b1221;
+            border-color: #facc15
+        }
+
+        .score-grid {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px
+        }
+
+        .score {
+            font-weight: 700;
+            text-align: center;
+            flex: 1
         }
 
         #scoreBox {
@@ -468,12 +500,34 @@
         .status-mini {
             position: absolute;
             left: 50%;
-            bottom: 8px;
+            top: 6px;
             transform: translateX(-50%);
             font-size: 12px;
-            color: #cbd5e1;
-            opacity: .9;
-            z-index: 4
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--edge);
+            background: var(--panel);
+            color: #0b1221;
+            z-index: 5;
+            box-shadow: var(--shadow)
+        }
+
+        .status-mini.ok {
+            background: #c9f7d5;
+            border-color: #86efac;
+            color: #0b1221
+        }
+
+        .status-mini.over {
+            background: #fed7d7;
+            border-color: #fca5a5;
+            color: #0b1221
+        }
+
+        .status-mini.under {
+            background: #dbeafe;
+            border-color: #93c5fd;
+            color: #0b1221
         }
 
         .gate {
@@ -508,7 +562,10 @@
 
 <body>
     <div class="app">
-        <h1>Balance des bases — glisser / déposer</h1>
+        <div class="topbar">
+            <h1>Balance des bases — glisser / déposer</h1>
+            <button id="themeToggle" class="themebtn" title="Mode sombre/clair">🌙</button>
+        </div>
 
         <div class="row">
             <div class="card">
@@ -532,7 +589,10 @@
             </div>
             <div class="card">
                 <label>Score</label>
-                <div id="scoreBox" style="font-weight:700">0 / 20</div>
+                <div class="score-grid">
+                    <div id="scoreBox" class="score">0 / 20</div>
+                    <button id="resetAll" class="ghost smallbtn" title="Réinitialiser (code requis)">Réinit.</button>
+                </div>
             </div>
         </div>
 
@@ -580,6 +640,8 @@
             const answerStatus = document.getElementById('answerStatus');
             const scoreBox = document.getElementById('scoreBox');
             const resetRightBtn = document.getElementById('resetRight');
+            const resetAllBtn = document.getElementById('resetAll');
+            const themeToggle = document.getElementById('themeToggle');
 
             const OBJECTS_BY_BASE = {
                 10: [
@@ -755,20 +817,26 @@
                     needleEl.style.transform = `translateX(-50%) rotate(${angle}deg)`;
                     needleEl.classList.remove('ok', 'over', 'under');
                 }
+                // Badge statut (bouton en avant-plan)
+                statusMini.className = 'status-mini';
 
                 if (tgt > cap) {
                     statusMini.textContent = `Inatteignable (cap ${cap} g)`;
+                    statusMini.classList.add('over');
                     if (needleEl) needleEl.classList.add('over');
                     return;
                 }
                 if (diff === 0) {
-                    statusMini.textContent = 'Équilibré !';
+                    statusMini.textContent = 'OK';
+                    statusMini.classList.add('ok');
                     if (needleEl) needleEl.classList.add('ok');
                 } else if (diff > 0) {
                     statusMini.textContent = 'Trop lourd';
+                    statusMini.classList.add('over');
                     if (needleEl) needleEl.classList.add('over');
                 } else {
                     statusMini.textContent = 'Trop léger';
+                    statusMini.classList.add('under');
                     if (needleEl) needleEl.classList.add('under');
                 }
             }
@@ -796,6 +864,28 @@
                 scoreBox.textContent = `${ok} / ${total}`;
             }
 
+            // --- Persistance locale ---
+            const STORAGE_KEY = 'balanceBases_v1';
+            function saveState() {
+                try {
+                    const payload = { assignedByBase: state.assignedByBase, resultsByBase: state.resultsByBase };
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+                } catch (e) {/* stockage indisponible */ }
+            }
+            function loadState() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    if (!raw) return false;
+                    const data = JSON.parse(raw);
+                    if (!data || !data.assignedByBase || !data.resultsByBase) return false;
+                    [2, 10, 16].forEach(b => {
+                        if (Array.isArray(data.assignedByBase[b])) state.assignedByBase[b] = data.assignedByBase[b];
+                        if (Array.isArray(data.resultsByBase[b])) state.resultsByBase[b] = data.resultsByBase[b];
+                    });
+                    return true;
+                } catch (e) { return false; }
+            }
+
             function checkAnswer() {
                 const gramsVal = sumRight();
                 const baseStr = (answerBaseInput.value || '').trim();
@@ -810,12 +900,26 @@
                 else if (gramsOk && baseOk) { answerStatus.textContent = '✅ Bonne réponse (masse et conversion).'; res[state.selectedIndex] = 'ok'; }
                 else if (gramsOk && !baseOk) { answerStatus.textContent = '🟠 Masse correcte, conversion incorrecte.'; res[state.selectedIndex] = 'warn'; }
                 else { answerStatus.textContent = '❌ Masse incorrecte.'; res[state.selectedIndex] = 'bad'; }
-                renderObjects(); recomputeScore();
+                renderObjects(); recomputeScore(); saveState();
             }
 
             baseSel.addEventListener('change', e => setBase(Number(e.target.value)));
             resetRightBtn.addEventListener('click', clearRight);
             checkAnswerBtn.addEventListener('click', checkAnswer);
+            resetAllBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const code = prompt('Code de réinitialisation ?');
+                if (code === '05111955') {
+                    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { }
+                    state.assignedByBase = { 2: [], 10: [], 16: [] };
+                    state.resultsByBase = { 2: Array(OBJECTS_BY_BASE[2].length).fill(null), 10: Array(OBJECTS_BY_BASE[10].length).fill(null), 16: Array(OBJECTS_BY_BASE[16].length).fill(null) };
+                    setBase(state.base);
+                    recomputeScore(); saveState();
+                    alert('Réinitialisation effectuée.');
+                } else if (code !== null) {
+                    alert('Code incorrect.');
+                }
+            });
             answerBaseInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkAnswer(); });
 
 
@@ -826,8 +930,21 @@
                 else { answerBaseInput.placeholder = 'Décimal standard (0-9)'; baseSymbol.textContent = ''; }
             }
 
+            // --- Thème ---
+            const THEME_KEY = 'balanceBases_theme';
+            function applyTheme(t) { document.body.dataset.theme = t; themeToggle.textContent = (t === 'light') ? '🌙' : '☀️'; try { localStorage.setItem(THEME_KEY, t); } catch (e) { } }
+            const savedTheme = (function () { try { return localStorage.getItem(THEME_KEY) || 'light'; } catch (e) { return 'light'; } })();
+            applyTheme(savedTheme);
+            themeToggle.addEventListener('click', () => applyTheme(document.body.dataset.theme === 'light' ? 'dark' : 'light'));
+
             // --- Init ---
+            const had = loadState();
             setBase(10);
+            if (had) {
+                [2, 10, 16].forEach(b => { if (state.assignedByBase[b].length) {/* ok */ } else ensureAssignmentsForBase(b); });
+                renderSuitcase(); renderObjects(); selectObject(0); recomputeScore();
+            }
+            saveState();
         })();
     </script>
 </body>
